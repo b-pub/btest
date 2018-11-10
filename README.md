@@ -36,12 +36,11 @@ But if you'd like to play with this, go ahead.
 `btest` is currently managed with cmake. From the toplevel directory,
 run these commands:
 
-`
-$ cd path/to/btest
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make -j
-`
+`$ cd path/to/btest`
+`$ mkdir build`
+`$ cd build`
+`$ cmake ..`
+`$ make -j`
+
 
 Brent, 9-nov-2018
