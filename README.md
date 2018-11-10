@@ -23,24 +23,34 @@ googletest.
 ## Features
 
 `btest` has a drastically reduced feature set compared to googletest.
+However, it implements the most important testing features, most easily
+reported in this table.
 
-`btest` implements the most basic features, and that means only
-simple, stand-alone tests are supported. No test fixtures, no
-global environments, no test filtering or randomization. `btest`
-does support disabling tests by prefixing their names with "DISABLED_".
+Feature                 | btest | gtest
+----------------------- | ----- | -----
+basic tests             | yes   | yes
+test fixtures           | yes   | yes
+DISABLED_ tests         | yes   | yes
+Test filtering          | no    | yes
+Global environment      | no    | yes
+Run order randomization | no    | yes
+Death tests             | no    | yes
 
-But if you'd like to play with this, go ahead.
+If you'd like to play with this, go ahead.
 
 ## Building btest
 
-`btest` is currently managed with cmake. From the toplevel directory,
-run these commands:
+`btest` is currently managed with cmake, and uses C++03 for its
+implementation. From the toplevel directory, run these commands:
 
-`$ cd path/to/btest`  
-`$ mkdir build`  
-`$ cd build`  
-`$ cmake ..`  
-`$ make -j`  
+```
+    $ cd path/to/btest
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+    $ make -j
+```
 
+---
 
-Brent, 9-nov-2018
+Brent - Nov 2018

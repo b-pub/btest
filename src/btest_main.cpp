@@ -20,7 +20,6 @@
 #include <iostream>
 #include <vector>
 #include <map>
-#include <memory>
 
 #include "btest.h"
 
@@ -148,7 +147,7 @@ class TestRegistrar
         for (size_t i=0; i < m_alltests.size(); ++i)
         {
             if (m_alltests[i]->runstate() == RegisteredTest::FAILED)
-                std::cout << "[FAILED  ] " << m_alltests[i]->fullName() << std::endl;
+                std::cout << "[ FAILED ] " << m_alltests[i]->fullName() << std::endl;
         }
         std::cout << "[--------]" << std::endl;
     }
@@ -194,10 +193,10 @@ class TestRegistrar
              */
             switch (rt->runstate()) {
                 case RegisteredTest::PASSED:
-                    std::cout << "[PASSED  ] " << rt->fullName() << std::endl;
+                    std::cout << "[ PASSED ] " << rt->fullName() << std::endl;
                     break;
                 case RegisteredTest::FAILED:
-                    std::cout << "[FAILED  ] " << rt->fullName() << std::endl;
+                    std::cout << "[ FAILED ] " << rt->fullName() << std::endl;
                     break;
                 default:
                     std::cout << "[UNKNOWN ] " << rt->fullName() << std::endl;
@@ -243,7 +242,7 @@ class TestRegistrar
     std::vector<RegisteredTest*> m_alltests; // just a flat list to start
 };
 
-static std::unique_ptr<TestRegistrar> s_testRegistrar;
+static TestRegistrar* s_testRegistrar = 0;
 
 /*
  * ::registerTest() is a forwarding function to the actual
@@ -255,15 +254,16 @@ static std::unique_ptr<TestRegistrar> s_testRegistrar;
  */
 RegToken registerTest(char const *suitename, char const *testname, TestFactoryBase *factory)
 {
-    if (suitename == nullptr || testname == nullptr || factory == nullptr)
+    if (!suitename || !testname || !factory)
     {
         throw std::exception();
     }
 
-    if (s_testRegistrar == nullptr)
+    if (!s_testRegistrar)
     {
-        std::unique_ptr<TestRegistrar> utr(new TestRegistrar());
-        s_testRegistrar = std::move(utr);
+        //std::unique_ptr<TestRegistrar> utr(new TestRegistrar());
+        //s_testRegistrar = std::move(utr);
+        s_testRegistrar = new TestRegistrar();
     }
 
     return s_testRegistrar->registerTest(suitename, testname, factory);
@@ -317,6 +317,8 @@ int main(int argc, char **argv)
               << " Disabled:    " << disabledCount << std::endl
               << " Failed:      " << failedCount << std::endl
               << " Passed:      " << passedCount << std::endl;
+
+    delete btest::s_testRegistrar;
 
     return (failedCount > 0) ? 1 : 0;
 }

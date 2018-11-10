@@ -202,6 +202,30 @@ new btest::TestFactory< BTEST_CLASS_NAME(suitename,testname) >());   \
 /* implement test body as following block */                         \
 void BTEST_CLASS_NAME(suitename,testname)::TestBody()
 
+/**
+ * See documentation for BTEST(). BTEST_F() declares a new test
+ * using a supporting fixture class.
+ *
+ * As with BTEST(), BTEST_F() should not be followed by anything
+ * except the block of code that implements the test.
+ */
+#define BTEST_F(fixture, testname)                                   \
+/* Define test suite class */                                        \
+class BTEST_CLASS_NAME(fixture,testname): public fixture             \
+{                                                                    \
+  public:                                                            \
+    virtual void TestBody();                                         \
+  private:                                                           \
+    static btest::RegToken s_registrationToken;                      \
+};                                                                   \
+/* invoke static-initialization registration */                      \
+btest::RegToken BTEST_CLASS_NAME(fixture,testname)::s_registrationToken =  \
+btest::registerTest(#fixture, #testname,                             \
+new btest::TestFactory< BTEST_CLASS_NAME(fixture,testname) >());     \
+/* implement test body as following block */                         \
+void BTEST_CLASS_NAME(fixture,testname)::TestBody()
+
+
 /*
  * Assertion types. These evaluate the one or two arguments given the
  * condition, and report errors if the condition is not satisfied.
