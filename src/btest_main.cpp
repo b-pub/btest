@@ -318,5 +318,5 @@ int main(int argc, char **argv)
               << " Failed:      " << failedCount << std::endl
               << " Passed:      " << passedCount << std::endl;
 
-    return 0;
+    return (failedCount > 0) ? 1 : 0;
 }
