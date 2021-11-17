@@ -19,6 +19,7 @@
 #define BTEST_H
 
 #include <iostream>
+#include <cstdint>
 
 namespace btest {
 
@@ -125,9 +126,11 @@ void recordTestFailure(RegToken token);
  *
  * If the operands are inequal, the error is reported and the
  * test is marked as failing.
+ *
+ * Return value is true if the two operands are equal.
  */
 template <typename LType, typename RType>
-void assert_eq(bool asserted,
+bool assert_eq(bool asserted,
                char const* lstr, char const* rstr,
                LType lval, RType rval,
                int line, char const* file, RegToken token)
@@ -143,14 +146,16 @@ void assert_eq(bool asserted,
             << "  right: " << rstr << std::endl;
         recordTestFailure(token);
     }
+    return !failed;
 }
 
 /**
  * See assert_eq().
  * This method, assert_ne(), tests inequality of two operands.
+ * Return value is true if the two operands are not equal.
  */
 template <typename LType, typename RType>
-void assert_ne(bool asserted,
+bool assert_ne(bool asserted,
                char const* lstr, char const* rstr,
                LType lval, RType rval,
                int line, char const* file, RegToken token)
@@ -166,6 +171,7 @@ void assert_ne(bool asserted,
             << "  right: " << rstr << std::endl;
         recordTestFailure(token);
     }
+    return !failed;
 }
 
 } // btest::
@@ -235,12 +241,12 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
  * Arguments are evaluated once
  */
 #define ASSERT_EQ(left,right) \
-    return btest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    if (!btest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define ASSERT_NE(left,right) \
-    return btest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    if (!btest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_EQ(left,right) \
-    btest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    (void)btest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 #define EXPECT_NE(left,right) \
-    btest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    (void)btest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 
 #endif // BTEST_H

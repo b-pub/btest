@@ -169,13 +169,12 @@ class TestRegistrar
         {
             std::cout << "[--------] " << rt->fullName() << std::endl;
             std::cout << "[running ]" << std::endl;
-            Test *testInstance = rt->makeTest();
-
-            rt->setRunstate(RegisteredTest::PASSED);
 
             /*
              * Test instance lifetime: ctor,SetUp,TestBody,TearDown,dtor
              */
+            Test *testInstance = rt->makeTest();
+            rt->setRunstate(RegisteredTest::PASSED);
             testInstance->SetUp();
             try {
                 testInstance->TestBody();
@@ -185,6 +184,12 @@ class TestRegistrar
                 rt->setRunstate(RegisteredTest::FAILED);
                 std::cout << "[EXCEPTED] Exception: " << e.what() << std::endl;
             }
+            catch (...)
+            {
+                rt->setRunstate(RegisteredTest::FAILED);
+                std::cout << "[EXCEPTED] Unknown Exception" << std::endl;
+            }
+
             testInstance->TearDown();
             delete testInstance;
 
