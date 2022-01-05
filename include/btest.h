@@ -149,6 +149,26 @@ bool assert_eq(bool asserted,
     return !failed;
 }
 
+template <typename LType, typename RType>
+bool assert_fpeq(bool asserted,
+                 char const* lstr, char const* rstr,
+                 LType lval, RType rval, float eps,
+                 int line, char const* file, RegToken token)
+{
+    bool failed = !(std::abs(lval - rval) < eps);
+    if (failed)
+    {
+        std::cout
+            << "Failure: (line " << line << ") " << file << std::endl
+            << "       : It is " << (asserted ? "asserted":"expected")
+            << " that these are equal:" << std::endl
+            << "   left: " << lstr << std::endl
+            << "  right: " << rstr << std::endl;
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
 /**
  * See assert_eq().
  * This method, assert_ne(), tests inequality of two operands.
@@ -173,6 +193,33 @@ bool assert_ne(bool asserted,
     }
     return !failed;
 }
+
+/**
+ * Assert that some expression is true
+ */
+template <typename LType>
+bool assert_true(bool asserted,
+                 char const* lstr,
+                 LType lval,
+                 int line, char const* file, RegToken token)
+{
+    bool failed = !(lval);
+    if (failed)
+    {
+        std::cout
+            << "Failure: (line " << line << ") " << file << std::endl
+            << "       : It is " << (asserted ? "asserted":"expected")
+            << " that this is true:" << std::endl
+            << "   expr: " << lstr << std::endl;
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
+/**
+ * Force a test failure outside of an assertion.
+ */
+std::ostream& forceFailure(int line, char const* file, RegToken token);
 
 } // btest::
 
@@ -248,5 +295,13 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
     (void)btest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 #define EXPECT_NE(left,right) \
     (void)btest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+#define ASSERT_TRUE(expr) \
+    if (!btest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
+
+#define ASSERT_FPEQ(left,right,eps)                                        \
+    if (!btest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return
+
+#define FAIL() \
+    btest::forceFailure(__LINE__, __FILE__, s_registrationToken)
 
 #endif // BTEST_H

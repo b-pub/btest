@@ -289,6 +289,17 @@ void recordTestFailure(RegToken token)
     s_testRegistrar->recordTestFailure(token);
 }
 
+/**
+ * forceFailure allows a test to force a failure outside of
+ * a normal BTest assertion.
+ */
+std::ostream& forceFailure(int line, char const* file, RegToken token)
+{
+    std::cout
+        << "Failure: (line " << line << ") " << file << std::endl;
+    recordTestFailure(token);
+    return std::cout;
+}
 
 } // btest::
 
