@@ -114,6 +114,11 @@ RegToken registerTest(char const *suitename,
 void recordTestFailure(RegToken token);
 
 /**
+ * Retrieve the current output stream.
+ */
+std::ostream& getOutstream();
+
+/**
  * Implementation detail.
  *
  * Templatized function assert_eq() provides a safe workspace
@@ -138,12 +143,12 @@ bool assert_eq(bool asserted,
     bool failed = (lval != rval);
     if (failed)
     {
-        std::cout
+        getOutstream()
             << "Failure: (line " << line << ") " << file << std::endl
             << "       : It is " << (asserted ? "asserted":"expected")
             << " that these are equal:" << std::endl
-            << "   left: " << lstr << std::endl
-            << "  right: " << rstr << std::endl;
+            << "   left: " << lstr << " = " << lval << std::endl
+            << "  right: " << rstr << " = " << rval << std::endl;
         recordTestFailure(token);
     }
     return !failed;
@@ -158,12 +163,12 @@ bool assert_fpeq(bool asserted,
     bool failed = !(std::abs(lval - rval) < eps);
     if (failed)
     {
-        std::cout
+        getOutstream()
             << "Failure: (line " << line << ") " << file << std::endl
             << "       : It is " << (asserted ? "asserted":"expected")
             << " that these are equal:" << std::endl
-            << "   left: " << lstr << std::endl
-            << "  right: " << rstr << std::endl;
+            << "   left: " << lstr << " = " << lval << std::endl
+            << "  right: " << rstr << " = " << rval << std::endl;
         recordTestFailure(token);
     }
     return !failed;
@@ -183,12 +188,12 @@ bool assert_ne(bool asserted,
     bool failed = (lval == rval);
     if (failed)
     {
-        std::cout
+        getOutstream()
             << "Failure: (line " << line << ") " << file << std::endl
             << "       : It is " << (asserted ? "asserted":"expected")
             << " that these are not equal:" << std::endl
-            << "   left: " << lstr << std::endl
-            << "  right: " << rstr << std::endl;
+            << "   left: " << lstr << " = " << lval << std::endl
+            << "  right: " << rstr << " = " << rval << std::endl;
         recordTestFailure(token);
     }
     return !failed;
@@ -206,7 +211,7 @@ bool assert_true(bool asserted,
     bool failed = !(lval);
     if (failed)
     {
-        std::cout
+        getOutstream()
             << "Failure: (line " << line << ") " << file << std::endl
             << "       : It is " << (asserted ? "asserted":"expected")
             << " that this is true:" << std::endl
@@ -217,9 +222,37 @@ bool assert_true(bool asserted,
 }
 
 /**
+ * Assert that some expression is false
+ */
+template <typename LType>
+bool assert_false(bool asserted,
+                 char const* lstr,
+                 LType lval,
+                 int line, char const* file, RegToken token)
+{
+    bool failed = !!(lval);
+    if (failed)
+    {
+        getOutstream()
+            << "Failure: (line " << line << ") " << file << std::endl
+            << "       : It is " << (asserted ? "asserted":"expected")
+            << " that this is false:" << std::endl
+            << "   expr: " << lstr << std::endl;
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+/**
  * Force a test failure outside of an assertion.
  */
 std::ostream& forceFailure(int line, char const* file, RegToken token);
+
+/**
+ * Provide a basic function to run all tests, and
+ * print a final summary of the number of passed,
+ * failed, and disabled tests.
+ */
+int runAndReport(std::ostream &out);
 
 } // btest::
 
@@ -297,6 +330,8 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
     (void)btest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 #define ASSERT_TRUE(expr) \
     if (!btest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
+#define ASSERT_FALSE(expr) \
+    if (!btest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 
 #define ASSERT_FPEQ(left,right,eps)                                        \
     if (!btest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return

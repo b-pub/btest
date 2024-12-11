@@ -13,12 +13,12 @@ BTEST(First, trueFalseAssertNE)
 
 BTEST(First, trueFalseExpectEQ)
 {
-    EXPECT_EQ(true, false);
+    EXPECT_EQ(true, false); // Expected failure
 }
 
 BTEST(First, trueFalseAssertEQ)
 {
-    ASSERT_EQ(true, false);
+    ASSERT_EQ(true, false); // Expected failure
 }
 
 BTEST(First, trueTrueExpectEQ)
@@ -33,11 +33,16 @@ BTEST(First, falseFalseExpectEQ)
 
 BTEST(Second, throwStdException)
 {
-    throw std::logic_error("logic error occurred");
+    throw std::logic_error("logic error occurred"); // Expected failure
 }
 
 BTEST(Second, DISABLED_testDisabled)
 {
     // This will crash if not disabled correctly
     *((volatile int*)0) = 42;
+}
+
+BTEST(Third, ExpectedFailure)
+{
+    FAIL() << "This is a forced failure." << std::endl; // Expected failure
 }

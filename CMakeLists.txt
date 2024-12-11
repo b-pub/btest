@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 
 project(btest CXX)
 
@@ -15,6 +15,7 @@ add_library(btest STATIC
 # Add one test executable as a demo
 
 add_executable(test_unittests
+    tests/main.cpp
     tests/sample_1.cpp
     tests/sample_2.cpp
 )

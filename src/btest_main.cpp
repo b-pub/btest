@@ -141,21 +141,21 @@ class TestRegistrar
     /**
      * Report the test names that failed
      */
-    void reportFailedTests() const
+    void reportFailedTests(std::ostream &out) const
     {
-        std::cout << "[--------]" << std::endl;
+        out << "[--------]" << std::endl;
         for (size_t i=0; i < m_alltests.size(); ++i)
         {
             if (m_alltests[i]->runstate() == RegisteredTest::FAILED)
-                std::cout << "[ FAILED ] " << m_alltests[i]->fullName() << std::endl;
+                out << "[ FAILED ] " << m_alltests[i]->fullName() << std::endl;
         }
-        std::cout << "[--------]" << std::endl;
+        out << "[--------]" << std::endl;
     }
 
     /**
      * Instantiate and run the test at index \c which.
      */
-    void runTest(size_t which)
+    void runTest(size_t which, std::ostream &out)
     {
         if (which >= m_alltests.size())
             return;
@@ -167,8 +167,8 @@ class TestRegistrar
          */
         if (rt->enabled())
         {
-            std::cout << "[--------] " << rt->fullName() << std::endl;
-            std::cout << "[running ]" << std::endl;
+            out << "[--------] " << rt->fullName() << std::endl;
+            out << "[running ]" << std::endl;
 
             /*
              * Test instance lifetime: ctor,SetUp,TestBody,TearDown,dtor
@@ -182,12 +182,12 @@ class TestRegistrar
             catch (std::exception &e)
             {
                 rt->setRunstate(RegisteredTest::FAILED);
-                std::cout << "[EXCEPTED] Exception: " << e.what() << std::endl;
+                out << "[EXCEPTED] Exception: " << e.what() << std::endl;
             }
             catch (...)
             {
                 rt->setRunstate(RegisteredTest::FAILED);
-                std::cout << "[EXCEPTED] Unknown Exception" << std::endl;
+                out << "[EXCEPTED] Unknown Exception" << std::endl;
             }
 
             testInstance->TearDown();
@@ -198,13 +198,13 @@ class TestRegistrar
              */
             switch (rt->runstate()) {
                 case RegisteredTest::PASSED:
-                    std::cout << "[ PASSED ] " << rt->fullName() << std::endl;
+                    out << "[ PASSED ] " << rt->fullName() << std::endl;
                     break;
                 case RegisteredTest::FAILED:
-                    std::cout << "[ FAILED ] " << rt->fullName() << std::endl;
+                    out << "[ FAILED ] " << rt->fullName() << std::endl;
                     break;
                 default:
-                    std::cout << "[UNKNOWN ] " << rt->fullName() << std::endl;
+                    out << "[UNKNOWN ] " << rt->fullName() << std::endl;
             }
         }
     }
@@ -247,7 +247,24 @@ class TestRegistrar
     std::vector<RegisteredTest*> m_alltests; // just a flat list to start
 };
 
-static TestRegistrar* s_testRegistrar = 0;
+/*
+ * The btest::outstream allows all test output to be
+ * redirected at runtime.
+ */
+static std::ostream *s_outstream = &std::cout;
+
+std::ostream& getOutstream()
+{
+    return *s_outstream;
+}
+
+/*
+ * The TestRegistrar instance must be constructed during
+ * static initialization (before main is called). By
+ * dynamically allocating it, we do not rely on static
+ * initialization order, but create it on demand at first use.
+ */
+static TestRegistrar *s_testRegistrar = 0;
 
 /*
  * ::registerTest() is a forwarding function to the actual
@@ -266,12 +283,11 @@ RegToken registerTest(char const *suitename, char const *testname, TestFactoryBa
 
     if (!s_testRegistrar)
     {
-        //std::unique_ptr<TestRegistrar> utr(new TestRegistrar());
-        //s_testRegistrar = std::move(utr);
         s_testRegistrar = new TestRegistrar();
     }
 
-    return s_testRegistrar->registerTest(suitename, testname, factory);
+    RegToken token = s_testRegistrar->registerTest(suitename, testname, factory);
+    return token;
 }
 
 /**
@@ -283,8 +299,6 @@ RegToken registerTest(char const *suitename, char const *testname, TestFactoryBa
  */
 void recordTestFailure(RegToken token)
 {
-    if (s_testRegistrar == nullptr)
-        return; // TODO: report internal error, throw, or something
 
     s_testRegistrar->recordTestFailure(token);
 }
@@ -295,46 +309,48 @@ void recordTestFailure(RegToken token)
  */
 std::ostream& forceFailure(int line, char const* file, RegToken token)
 {
-    std::cout
+    getOutstream()
         << "Failure: (line " << line << ") " << file << std::endl;
     recordTestFailure(token);
-    return std::cout;
+    return getOutstream();
 }
-
-} // btest::
-
 
 /**
  * Provide a basic function to run everything
  */
-int main(int argc, char **argv)
+int runAndReport(std::ostream &out)
 {
-    std::cout
+    s_outstream = &out;
+
+    out
         << "BTEST Starting. " << btest::s_testRegistrar->getTestCount() << " tests to run"
         << std::endl;
 
     size_t testCount = btest::s_testRegistrar->getTestCount();
     for (size_t i=0ul; i<testCount; ++i)
     {
-        btest::s_testRegistrar->runTest(i);
+        btest::s_testRegistrar->runTest(i, out);
     }
 
     size_t failedCount = btest::s_testRegistrar->getFailedTestCount();
     size_t disabledCount = btest::s_testRegistrar->getDisabledTestCount();
     size_t passedCount = testCount - disabledCount - failedCount;
 
-    std::cout << "[  DONE  ]" << std::endl;
+    out << "[  DONE  ]" << std::endl;
 
     if (failedCount > 0)
-        btest::s_testRegistrar->reportFailedTests();
+        btest::s_testRegistrar->reportFailedTests(out);
 
-    std::cout << "-- Test results --" << std::endl
-              << " Total tests: " << testCount << std::endl
-              << " Disabled:    " << disabledCount << std::endl
-              << " Failed:      " << failedCount << std::endl
-              << " Passed:      " << passedCount << std::endl;
+    out << "-- Test results --" << std::endl
+        << " Total tests: " << testCount << std::endl
+        << " Disabled:    " << disabledCount << std::endl
+        << " Failed:      " << failedCount << std::endl
+        << " Passed:      " << passedCount << std::endl;
 
-    delete btest::s_testRegistrar;
+    // Reset the s_outstream to ensure it's always valid
+    s_outstream = &std::cout;
 
     return (failedCount > 0) ? 1 : 0;
 }
+
+} // btest::
