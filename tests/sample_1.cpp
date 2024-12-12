@@ -1,5 +1,10 @@
+/*
+ * SPDX-License-Identifier: ISC
+ *
+ * Example unit test for the btest library.
+ */
 #include <stdexcept>
-#include "btest.h"
+#include "btest.hpp"
 
 BTEST(First, trueFalseExpectNE)
 {

@@ -1,7 +1,7 @@
 /*
  * ISC License
  *
- * Copyright (c) 2018 Brent Burton
+ * Copyright (c) 2018,2024 Brent Burton
  *
  * Permission to use, copy, modify, and/or distribute this software for any
  * purpose with or without fee is hereby granted, provided that the above
@@ -14,22 +14,37 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ * Public header for the btest library.
  */
-#ifndef BTEST_H
-#define BTEST_H
+#pragma once
 
 #include <iostream>
 #include <cstdint>
 
+/*
+ * While all declarations in this file are public
+ * to some extent, these first ones are more implementation
+ * but must be publicly accessible.
+ *
+ * The "definitely public" bits are defined below,
+ * and are marked with PUBLIC in their comments.
+ *
+ * PUBLIC
+ */
+
+/**
+ * Define the btest namespace to contain our machinery.
+ */
 namespace btest {
 
 /**
  * The Test class is an abstract base for all btest test
- * classes. A btest client needs to know the lifetime of
- * a test, and that test instances only exist to run a
- * single test.
+ * classes. A btest client needs to know the lifecycle of
+ * a test, and that test instances only exist long enough
+ * to run a single test.
  *
- * Lifetime:
+ * Lifecycle:
  *  1. test construction
  *  2. ::SetUp() is called
  *  3. ::TestBody() is called. This is the actual test code.
@@ -242,15 +257,24 @@ bool assert_false(bool asserted,
     }
     return !failed;
 }
+
 /**
  * Force a test failure outside of an assertion.
  */
 std::ostream& forceFailure(int line, char const* file, RegToken token);
 
+/*============================================
+ * Start of truly public functions and macros
+ *
+ * PUBLIC
+ */
+
 /**
  * Provide a basic function to run all tests, and
  * print a final summary of the number of passed,
  * failed, and disabled tests.
+ *
+ * PUBLIC
  */
 int runAndReport(std::ostream &out);
 
@@ -260,6 +284,8 @@ int runAndReport(std::ostream &out);
  * The BTEST_CLASS_NAME(suite,test) macro provides
  * a standard way to name Test classes in btest.
  * Calling this macro (a,b) yields symbol a_b_Test.
+ *
+ * PUBLIC
  */
 #define BTEST_CLASS_NAME(suite,test) suite##_##test##_Test
 
@@ -271,6 +297,8 @@ int runAndReport(std::ostream &out);
  *
  * This macro should not be followed by an immediate semicolon,
  * but rather a {block of code that implements the test}
+ *
+ * PUBLIC
  */
 #define BTEST(suitename, testname)                                   \
 /* Define test suite class */                                        \
@@ -294,6 +322,8 @@ void BTEST_CLASS_NAME(suitename,testname)::TestBody()
  *
  * As with BTEST(), BTEST_F() should not be followed by anything
  * except the block of code that implements the test.
+ *
+ * PUBLIC
  */
 #define BTEST_F(fixture, testname)                                   \
 /* Define test suite class */                                        \
@@ -311,14 +341,15 @@ new btest::TestFactory< BTEST_CLASS_NAME(fixture,testname) >());     \
 /* implement test body as following block */                         \
 void BTEST_CLASS_NAME(fixture,testname)::TestBody()
 
-
 /*
  * Assertion types. These evaluate the one or two arguments given the
  * condition, and report errors if the condition is not satisfied.
  * ASSERT_<COND>() macros are fatal errors, that exit the current function.
  * EXPECT_<COND>() macros are nonfatal, and allow the test to continue.
  *
- * Arguments are evaluated once
+ * Arguments are evaluated once.
+ *
+ * PUBLIC
  */
 #define ASSERT_EQ(left,right) \
     if (!btest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
@@ -336,7 +367,21 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
 #define ASSERT_FPEQ(left,right,eps)                                        \
     if (!btest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return
 
+/**
+ * Force a test failure. If a condition cannot be cleanly
+ * detected by an ASSERT* or EXPECT* macro, provide the
+ * FAIL() mechanism to report a failure after detection.
+ *
+ * Note: FAIL() returns a `std::ostream`-compatible reference
+ * so a message can be reported as test output. E.g.:
+ *
+ *     FAIL() << "World Domination Failed" << std::endl;
+ *
+ * A line ending may be used like above; the btest library will not
+ * append a newline.
+ *
+ * PUBLIC
+ */
 #define FAIL() \
     btest::forceFailure(__LINE__, __FILE__, s_registrationToken)
 
-#endif // BTEST_H

@@ -1,8 +1,15 @@
-#include "btest.h"
-
 /*
- * Create a test fixture, to provide a common context
- * across related tests
+ * SPDX-License-Identifier: ISC
+ *
+ * Example unit test for the btest library.
+ */
+#include "btest.hpp"
+
+/**
+ * Define a test fixture. Fixtures provide a common context
+ * across many related tests. Fixture classes can also
+ * override the ::SetUp() and ::TearDown() methods for more
+ * test preparation.
  */
 class ByteOrder: public btest::Test
 {

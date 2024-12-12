@@ -1,5 +1,10 @@
+/*
+ * SPDX-License-Identifier: ISC
+ *
+ * Example unit test for the btest library.
+ */
 #include <iostream>
-#include "btest.h"
+#include "btest.hpp"
 
 int main(int argc, char **argv)
 {

@@ -9,7 +9,7 @@ include_directories(include)
 # Define the btest static library
 
 add_library(btest STATIC
-    src/btest_main.cpp
+    src/btest_impl.cpp
 )
 
 # Add one test executable as a demo
