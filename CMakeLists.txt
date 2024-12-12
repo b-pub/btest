@@ -1,23 +1,23 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.10)
 
-project(btest CXX)
+project(embtest CXX)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++03 -Wall -Werror")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Werror")
 
 include_directories(include)
 
-# Define the btest static library
+# Define the embtest static library
 
-add_library(btest STATIC
-    src/btest_impl.cpp
+add_library(embtest STATIC
+    src/embtest_impl.cpp
 )
 
 # Add one test executable as a demo
 
-add_executable(test_unittests
+add_executable(embtest_unittests
     tests/main.cpp
     tests/sample_1.cpp
     tests/sample_2.cpp
 )
 
-target_link_libraries(test_unittests btest)
+target_link_libraries(embtest_unittests embtest)

@@ -1,53 +1,51 @@
 /*
- * SPDX-License-Identifier: ISC
- *
- * Example unit test for the btest library.
+ * Example unit test for the embtest library.
  */
 #include <stdexcept>
-#include "btest.hpp"
+#include "embtest.hpp"
 
-BTEST(First, trueFalseExpectNE)
+TEST(First, trueFalseExpectNE)
 {
     EXPECT_NE(true, false);
 }
 
-BTEST(First, trueFalseAssertNE)
+TEST(First, trueFalseAssertNE)
 {
     ASSERT_NE(true, false);
 }
 
-BTEST(First, trueFalseExpectEQ)
+TEST(First, trueFalseExpectEQ)
 {
     EXPECT_EQ(true, false); // Expected failure
 }
 
-BTEST(First, trueFalseAssertEQ)
+TEST(First, trueFalseAssertEQ)
 {
     ASSERT_EQ(true, false); // Expected failure
 }
 
-BTEST(First, trueTrueExpectEQ)
+TEST(First, trueTrueExpectEQ)
 {
     EXPECT_EQ(true, true);
 }
 
-BTEST(First, falseFalseExpectEQ)
+TEST(First, falseFalseExpectEQ)
 {
     EXPECT_EQ(false, false);
 }
 
-BTEST(Second, throwStdException)
+TEST(Second, throwStdException)
 {
     throw std::logic_error("logic error occurred"); // Expected failure
 }
 
-BTEST(Second, DISABLED_testDisabled)
+TEST(Second, DISABLED_testDisabled)
 {
     // This will crash if not disabled correctly
     *((volatile int*)0) = 42;
 }
 
-BTEST(Third, ExpectedFailure)
+TEST(Third, ExpectedFailure)
 {
     FAIL() << "This is a forced failure." << std::endl; // Expected failure
 }

@@ -1,10 +1,8 @@
 /*
- * SPDX-License-Identifier: ISC
- *
- * Example unit test for the btest library.
+ * Example unit test for the embtest library.
  */
 #include <iostream>
-#include "btest.hpp"
+#include "embtest.hpp"
 
 int main(int argc, char **argv)
 {
@@ -14,10 +12,10 @@ int main(int argc, char **argv)
      * executes the tests, tracks their results, and prints a final
      * report of passing, failing, and disabled tests.
      *
-     * btest::runAndReport() accepts a std::ostream& so that all test
+     * embtest::runAndReport() accepts a std::ostream& so that all test
      * output can be redirected as necessry.
      */
-    int result = btest::runAndReport(std::cout);
+    int result = embtest::runAndReport(std::cout);
 
     std::cout
         << std::endl

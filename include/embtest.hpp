@@ -1,5 +1,7 @@
 /*
- * ISC License
+ * Public header for the embtest library.
+ *
+ * SDPX-License-Identifier: ISC
  *
  * Copyright (c) 2018,2024 Brent Burton
  *
@@ -14,8 +16,6 @@
  * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
- *
- * Public header for the btest library.
  */
 #pragma once
 
@@ -34,13 +34,13 @@
  */
 
 /**
- * Define the btest namespace to contain our machinery.
+ * Define the embtest namespace to contain our machinery.
  */
-namespace btest {
+namespace embtest {
 
 /**
- * The Test class is an abstract base for all btest test
- * classes. A btest client needs to know the lifecycle of
+ * The Test class is an abstract base for all embtest test
+ * classes. A embtest client needs to know the lifecycle of
  * a test, and that test instances only exist long enough
  * to run a single test.
  *
@@ -69,7 +69,7 @@ class Test
 /**
  * TestFactoryBase is an abstract base class that provides
  * a simple interface: a method to create instances of a
- * btest::Test.
+ * embtest::Test.
  */
 class TestFactoryBase
 {
@@ -112,7 +112,7 @@ typedef int RegToken;
  * Internal function registerTest() accepts a test's suite name,
  * its own test name, and a factory object for this test type.
  *
- * registerTest() then registers the test with btest's test
+ * registerTest() then registers the test with embtest's test
  * registration mechanism, and if all is successful, returns a
  * RegToken for later use.
  */
@@ -278,21 +278,35 @@ std::ostream& forceFailure(int line, char const* file, RegToken token);
  */
 int runAndReport(std::ostream &out);
 
-} // btest::
+} // embtest::
+
+/*
+ * Perform a few sanity checks to ensure names
+ * from this library are not already declared:
+ */
+#if defined(TEST_CLASS_NAME)
+#error TEST_CLASS_NAME macro already defined
+#endif
+#if defined(TEST)
+#error TEST macro already defined
+#endif
+#if defined(TEST_F)
+#error TEST_F macro already defined
+#endif
 
 /**
- * The BTEST_CLASS_NAME(suite,test) macro provides
- * a standard way to name Test classes in btest.
+ * The TEST_CLASS_NAME(suite,test) macro provides
+ * a standard way to name Test classes in embtest.
  * Calling this macro (a,b) yields symbol a_b_Test.
  *
  * PUBLIC
  */
-#define BTEST_CLASS_NAME(suite,test) suite##_##test##_Test
+#define TEST_CLASS_NAME(suite,test) suite##_##test##_Test
 
 /**
- * Declare a new test with BTEST(suitename, testname).
+ * Declare a new test with TEST(suitename, testname).
  *
- * This macro defines the test class, registers it with btest
+ * This macro defines the test class, registers it with embtest
  * internals, and implements the test body.
  *
  * This macro should not be followed by an immediate semicolon,
@@ -300,46 +314,46 @@ int runAndReport(std::ostream &out);
  *
  * PUBLIC
  */
-#define BTEST(suitename, testname)                                   \
+#define TEST(suitename, testname)                                    \
 /* Define test suite class */                                        \
-class BTEST_CLASS_NAME(suitename,testname): public btest::Test       \
+class TEST_CLASS_NAME(suitename,testname): public embtest::Test      \
 {                                                                    \
   public:                                                            \
     virtual void TestBody();                                         \
   private:                                                           \
-    static btest::RegToken s_registrationToken;                      \
+    static embtest::RegToken s_registrationToken;                    \
 };                                                                   \
 /* invoke static-initialization registration */                      \
-btest::RegToken BTEST_CLASS_NAME(suitename,testname)::s_registrationToken =  \
-btest::registerTest(#suitename, #testname,                           \
-new btest::TestFactory< BTEST_CLASS_NAME(suitename,testname) >());   \
+embtest::RegToken TEST_CLASS_NAME(suitename,testname)::s_registrationToken =  \
+embtest::registerTest(#suitename, #testname,                         \
+new embtest::TestFactory< TEST_CLASS_NAME(suitename,testname) >());  \
 /* implement test body as following block */                         \
-void BTEST_CLASS_NAME(suitename,testname)::TestBody()
+void TEST_CLASS_NAME(suitename,testname)::TestBody()
 
 /**
- * See documentation for BTEST(). BTEST_F() declares a new test
+ * See documentation for TEST(). TEST_F() declares a new test
  * using a supporting fixture class.
  *
- * As with BTEST(), BTEST_F() should not be followed by anything
+ * As with TEST(), TEST_F() should not be followed by anything
  * except the block of code that implements the test.
  *
  * PUBLIC
  */
-#define BTEST_F(fixture, testname)                                   \
+#define TEST_F(fixture, testname)                                    \
 /* Define test suite class */                                        \
-class BTEST_CLASS_NAME(fixture,testname): public fixture             \
+class TEST_CLASS_NAME(fixture,testname): public fixture              \
 {                                                                    \
   public:                                                            \
     virtual void TestBody();                                         \
   private:                                                           \
-    static btest::RegToken s_registrationToken;                      \
+    static embtest::RegToken s_registrationToken;                    \
 };                                                                   \
 /* invoke static-initialization registration */                      \
-btest::RegToken BTEST_CLASS_NAME(fixture,testname)::s_registrationToken =  \
-btest::registerTest(#fixture, #testname,                             \
-new btest::TestFactory< BTEST_CLASS_NAME(fixture,testname) >());     \
+embtest::RegToken TEST_CLASS_NAME(fixture,testname)::s_registrationToken =  \
+embtest::registerTest(#fixture, #testname,                           \
+new embtest::TestFactory< TEST_CLASS_NAME(fixture,testname) >());    \
 /* implement test body as following block */                         \
-void BTEST_CLASS_NAME(fixture,testname)::TestBody()
+void TEST_CLASS_NAME(fixture,testname)::TestBody()
 
 /*
  * Assertion types. These evaluate the one or two arguments given the
@@ -352,20 +366,20 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
  * PUBLIC
  */
 #define ASSERT_EQ(left,right) \
-    if (!btest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+    if (!embtest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define ASSERT_NE(left,right) \
-    if (!btest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+    if (!embtest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_EQ(left,right) \
-    (void)btest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    (void)embtest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 #define EXPECT_NE(left,right) \
-    (void)btest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+    (void)embtest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
 #define ASSERT_TRUE(expr) \
-    if (!btest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
+    if (!embtest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 #define ASSERT_FALSE(expr) \
-    if (!btest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
+    if (!embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 
 #define ASSERT_FPEQ(left,right,eps)                                        \
-    if (!btest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return
+    if (!embtest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return
 
 /**
  * Force a test failure. If a condition cannot be cleanly
@@ -377,11 +391,11 @@ void BTEST_CLASS_NAME(fixture,testname)::TestBody()
  *
  *     FAIL() << "World Domination Failed" << std::endl;
  *
- * A line ending may be used like above; the btest library will not
+ * A line ending may be used like above; the embtest library will not
  * append a newline.
  *
  * PUBLIC
  */
 #define FAIL() \
-    btest::forceFailure(__LINE__, __FILE__, s_registrationToken)
+    embtest::forceFailure(__LINE__, __FILE__, s_registrationToken)
 

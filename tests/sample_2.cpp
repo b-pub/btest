@@ -1,9 +1,7 @@
 /*
- * SPDX-License-Identifier: ISC
- *
- * Example unit test for the btest library.
+ * Example unit test for the embtest library.
  */
-#include "btest.hpp"
+#include "embtest.hpp"
 
 /**
  * Define a test fixture. Fixtures provide a common context
@@ -11,7 +9,7 @@
  * override the ::SetUp() and ::TearDown() methods for more
  * test preparation.
  */
-class ByteOrder: public btest::Test
+class ByteOrder: public embtest::Test
 {
   protected:
     ByteOrder()
@@ -26,27 +24,27 @@ class ByteOrder: public btest::Test
     IntBytes m_intBytes;
 };
 
-BTEST_F(ByteOrder, byte1)
+TEST_F(ByteOrder, byte1)
 {
     EXPECT_EQ(m_intBytes.bytes[0], 0x40);
 }
 
-BTEST_F(ByteOrder, byte2)
+TEST_F(ByteOrder, byte2)
 {
     EXPECT_EQ(m_intBytes.bytes[1], 0x30);
 }
 
-BTEST_F(ByteOrder, byte3)
+TEST_F(ByteOrder, byte3)
 {
     EXPECT_EQ(m_intBytes.bytes[2], 0x20);
 }
 
-BTEST_F(ByteOrder, byte4)
+TEST_F(ByteOrder, byte4)
 {
     EXPECT_EQ(m_intBytes.bytes[3], 0x10);
 }
 
-BTEST_F(ByteOrder, structSize)
+TEST_F(ByteOrder, structSize)
 {
     EXPECT_EQ(sizeof(m_intBytes), sizeof(int));
 }

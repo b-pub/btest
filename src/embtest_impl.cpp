@@ -1,17 +1,30 @@
 /*
- * SPDX-License-Identifier: ISC
+ * Implementation of the embtest library.
  *
- * Implementation of the btest library.
+ * SDPX-License-Identifier: ISC
+ *
+ * Copyright (c) 2018,2024 Brent Burton
+ *
+ * Permission to use, copy, modify, and/or distribute this software for any
+ * purpose with or without fee is hereby granted, provided that the above
+ * copyright notice and this permission notice appear in all copies.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
-
 #include <string>
 #include <iostream>
 #include <vector>
 #include <map>
 
-#include "btest.hpp"
+#include "embtest.hpp"
 
-namespace btest {
+namespace embtest {
 
 /**
  * A RegisteredTest contains the internal setup data for a
@@ -236,7 +249,7 @@ class TestRegistrar
 };
 
 /*
- * The btest::outstream allows all test output to be
+ * The embtest::s_outstream allows all test output to be
  * redirected at runtime.
  */
 static std::ostream *s_outstream = &std::cout;
@@ -311,23 +324,23 @@ int runAndReport(std::ostream &out)
     s_outstream = &out;
 
     out
-        << "BTEST Starting. " << btest::s_testRegistrar->getTestCount() << " tests to run"
+        << "Tests starting. " << embtest::s_testRegistrar->getTestCount() << " tests to run"
         << std::endl;
 
-    size_t testCount = btest::s_testRegistrar->getTestCount();
+    size_t testCount = embtest::s_testRegistrar->getTestCount();
     for (size_t i=0ul; i<testCount; ++i)
     {
-        btest::s_testRegistrar->runTest(i, out);
+        embtest::s_testRegistrar->runTest(i, out);
     }
 
-    size_t failedCount = btest::s_testRegistrar->getFailedTestCount();
-    size_t disabledCount = btest::s_testRegistrar->getDisabledTestCount();
+    size_t failedCount = embtest::s_testRegistrar->getFailedTestCount();
+    size_t disabledCount = embtest::s_testRegistrar->getDisabledTestCount();
     size_t passedCount = testCount - disabledCount - failedCount;
 
     out << "[  DONE  ]" << std::endl;
 
     if (failedCount > 0)
-        btest::s_testRegistrar->reportFailedTests(out);
+        embtest::s_testRegistrar->reportFailedTests(out);
 
     out << "-- Test results --" << std::endl
         << " Total tests: " << testCount << std::endl
@@ -341,4 +354,4 @@ int runAndReport(std::ostream &out)
     return (failedCount > 0) ? 1 : 0;
 }
 
-} // btest::
+} // embtest::
