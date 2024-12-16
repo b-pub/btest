@@ -10,13 +10,14 @@ implements the basics.
 
 The `embtest` library was started out of curiosity about how GoogleTest
 worked -- how does one define unit tests easily, with no configuration,
-and have simple execution? `Embtest` has not only scratched that itch,
-but has become useful in its own right.
+and have simple execution? `Embtest` has not only scratched that itch
+to define a statically-defined execution framework, but has become
+useful in its own right.
 
-The internals of `embtest` (and GoogleTest, Catch2, etc) must:
+Frameworks like `embtest` (and GoogleTest, Catch2, etc) must:
 * define tests during static initialization
 * register tests into a central registry/controller
-* provide runtime mechanisms to flag tests' results in a registry
+* provide runtime mechanisms to record tests' results in a registry
 * use abstract classes and object factories to create test instances
 
 ## Features
@@ -26,21 +27,21 @@ However, it implements what are arguably the most important testing
 features, listed in this table.
 
 Feature                   | embtest | gtest
-------------------------- | ----- | -----
-basic tests               | yes   | yes
-test fixtures             | yes   | yes
-DISABLED_ tests           | yes   | yes
-Test filtering            | no    | yes
-Global environment        | no    | yes
-Run order randomization   | no    | yes
-Death tests               | no    | yes
-Value-parameterized tests | no    | yes
-XML or JSON format output | no    | yes
+------------------------- | ------- | -----
+basic tests               | yes     | yes
+test fixtures             | yes     | yes
+DISABLED_ tests           | yes     | yes
+Test filtering            | no      | yes
+Global environment        | no      | yes
+Run order randomization   | no      | yes
+Death tests               | no      | yes
+Value-parameterized tests | no      | yes
+XML or JSON format output | no      | yes
 
 Of these missing features, I'd probably focus on the
 following additions next.
 1. Run order randomization (including repeats)
-2. Test output formatting
+2. XML/JSON output formatting
 
 Other features of `embtest` that are appealing are:
 * very small footprint - minimal increase in code size and compilation times
@@ -48,7 +49,7 @@ Other features of `embtest` that are appealing are:
 * `embtest` output can be redirected to any `std::ostream` provided by the application
 * no assumptions about platform
 * no configuration
-* intelligible symbols to help with debugging
+* generates debug-friendly symbols
 
 ## Applications of *embtest*
 
@@ -70,11 +71,11 @@ test names, making inspection via a debugger that much easier.
 
 ## Example Usage
 
-A unit test executable often consists of the `main()` entry point
+A unit test program often consists of the `main()` entry point
 in one compilation unit, and tests defined in possibly several
 other files. The included test program in `embtest/test`, `embtest_unittest`,
-is an example test program that includes isolated tests, disabled tests,
-and a fixture.
+is an example test program that includes individual tests, disabled tests,
+and related tests that share a fixture.
 
 The simplest test program might be the following.
 

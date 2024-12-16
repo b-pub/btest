@@ -1,36 +1,26 @@
 /*
- * Public header for the embtest library.
- *
- * SDPX-License-Identifier: ISC
+ * Public header for the embtest unit-test library.
  *
  * Copyright (c) 2018,2024 Brent Burton
  *
- * Permission to use, copy, modify, and/or distribute this software for any
- * purpose with or without fee is hereby granted, provided that the above
- * copyright notice and this permission notice appear in all copies.
- *
- * THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
- * WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
- * ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
- * WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
- * ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
- * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ * SDPX-License-Identifier: ISC
  */
 #pragma once
 
 #include <iostream>
 #include <cstdint>
 
+#define EMBTEST_VERSION_MAJOR 1
+#define EMBTEST_VERSION_MINOR 1
+#define EMBTEST_VERSION_PATCH 0
+
 /*
  * While all declarations in this file are public
- * to some extent, these first ones are more implementation
- * but must be publicly accessible.
+ * to some extent, many of them are more implementation
+ * details but must be publicly accessible.
  *
- * The "definitely public" bits are defined below,
- * and are marked with PUBLIC in their comments.
- *
- * PUBLIC
+ * The "definitely public" types are marked with
+ * PUBLIC in their comments.
  */
 
 /**
@@ -38,11 +28,25 @@
  */
 namespace embtest {
 
+/*
+ * Version reporting
+ *
+ * Define a couple stringification macros.
+ */
+#define S(thing) S2(thing)
+#define S2(thing) #thing
+
+constexpr const char *versionString =
+    S(EMBTEST_VERSION_MAJOR) "." S(EMBTEST_VERSION_MINOR) "." S(EMBTEST_VERSION_PATCH);
+
+#undef S
+#undef S2
+
 /**
  * The Test class is an abstract base for all embtest test
- * classes. A embtest client needs to know the lifecycle of
- * a test, and that test instances only exist long enough
- * to run a single test.
+ * classes and test fixtures. A embtest client needs to
+ * know the lifecycle of a test, and that test instances
+ * only exist long enough to run a single test.
  *
  * Lifecycle:
  *  1. test construction
@@ -53,15 +57,17 @@ namespace embtest {
  *
  * As an implementation note, the block of code that represents
  * a test is the body of the ::TestBody() method.
+ *
+ * PUBLIC
  */
 class Test
 {
   public:
     Test() {}
 
-    virtual void SetUp() {}
-    virtual void TestBody() = 0;
-    virtual void TearDown() {}
+    virtual void SetUp() {}       ///< SetUp() is not used for tests, but override for test fixtures
+    virtual void TestBody() = 0;  ///< TestBody() contains the test code proper
+    virtual void TearDown() {}    ///< TearDown() is not used for tests, but override for test fixtures
 
     virtual ~Test() {}
 };
@@ -70,6 +76,8 @@ class Test
  * TestFactoryBase is an abstract base class that provides
  * a simple interface: a method to create instances of a
  * embtest::Test.
+ *
+ * IMPLEMENTATION DETAIL
  */
 class TestFactoryBase
 {
@@ -94,6 +102,8 @@ class TestFactoryBase
 /**
  * The TestFactory template class knows how to make one
  * type of Test. In fact, this is all it does.
+ *
+ * IMPLEMENTATION DETAIL
  */
 template <typename T>
 class TestFactory : public TestFactoryBase
@@ -105,6 +115,8 @@ class TestFactory : public TestFactoryBase
 /**
  * A RegToken is essentially a handle into the internal
  * storage of tests and their registrations.
+ *
+ * IMPLEMENTATION DETAIL
  */
 typedef int RegToken;
 
@@ -115,6 +127,8 @@ typedef int RegToken;
  * registerTest() then registers the test with embtest's test
  * registration mechanism, and if all is successful, returns a
  * RegToken for later use.
+ *
+ * IMPLEMENTATION DETAIL
  */
 RegToken registerTest(char const *suitename,
                       char const *testname,
@@ -125,17 +139,19 @@ RegToken registerTest(char const *suitename,
  *
  * recordTestFailure() uses the RegToken from registerTest() to
  * note a test has failed.
+ *
+ * IMPLEMENTATION DETAIL
  */
 void recordTestFailure(RegToken token);
 
 /**
  * Retrieve the current output stream.
+ *
+ * PUBLIC
  */
 std::ostream& getOutstream();
 
 /**
- * Implementation detail.
- *
  * Templatized function assert_eq() provides a safe workspace
  * to evaluate equality of two operands (left and right).
  *
@@ -148,6 +164,8 @@ std::ostream& getOutstream();
  * test is marked as failing.
  *
  * Return value is true if the two operands are equal.
+ *
+ * IMPLEMENTATION DETAIL
  */
 template <typename LType, typename RType>
 bool assert_eq(bool asserted,
@@ -193,6 +211,8 @@ bool assert_fpeq(bool asserted,
  * See assert_eq().
  * This method, assert_ne(), tests inequality of two operands.
  * Return value is true if the two operands are not equal.
+ *
+ * IMPLEMENTATION DETAIL
  */
 template <typename LType, typename RType>
 bool assert_ne(bool asserted,
@@ -216,6 +236,8 @@ bool assert_ne(bool asserted,
 
 /**
  * Assert that some expression is true
+ *
+ * IMPLEMENTATION DETAIL
  */
 template <typename LType>
 bool assert_true(bool asserted,
@@ -238,6 +260,8 @@ bool assert_true(bool asserted,
 
 /**
  * Assert that some expression is false
+ *
+ * IMPLEMENTATION DETAIL
  */
 template <typename LType>
 bool assert_false(bool asserted,
@@ -260,6 +284,15 @@ bool assert_false(bool asserted,
 
 /**
  * Force a test failure outside of an assertion.
+ *
+ * Indicate a test failure by specifying the file and line number,
+ * and the test RegToken for bookkeeping.
+ *
+ * @return Reference to the output stream for trailing messages.
+ *
+ * @see the @ref FAIL()
+ *
+ * IMPLEMENTATION DETAIL, use FAIL() instead.
  */
 std::ostream& forceFailure(int line, char const* file, RegToken token);
 
@@ -273,6 +306,9 @@ std::ostream& forceFailure(int line, char const* file, RegToken token);
  * Provide a basic function to run all tests, and
  * print a final summary of the number of passed,
  * failed, and disabled tests.
+ *
+ * @param[in] out The output stream to write progress and summary information.
+ * @returns Integer suitable for an exit code (0=success, 1=error)
  *
  * PUBLIC
  */
@@ -307,10 +343,11 @@ int runAndReport(std::ostream &out);
  * Declare a new test with TEST(suitename, testname).
  *
  * This macro defines the test class, registers it with embtest
- * internals, and implements the test body.
+ * internals, and implements the test body method.
  *
  * This macro should not be followed by an immediate semicolon,
- * but rather a {block of code that implements the test}
+ * but rather a {block of code that implements the test}.
+ * (Implementation note: the {block of test code} becomes Test::TestBody().)
  *
  * PUBLIC
  */
@@ -319,7 +356,7 @@ int runAndReport(std::ostream &out);
 class TEST_CLASS_NAME(suitename,testname): public embtest::Test      \
 {                                                                    \
   public:                                                            \
-    virtual void TestBody();                                         \
+    void TestBody();                                                 \
   private:                                                           \
     static embtest::RegToken s_registrationToken;                    \
 };                                                                   \
@@ -344,7 +381,7 @@ void TEST_CLASS_NAME(suitename,testname)::TestBody()
 class TEST_CLASS_NAME(fixture,testname): public fixture              \
 {                                                                    \
   public:                                                            \
-    virtual void TestBody();                                         \
+    void TestBody();                                                 \
   private:                                                           \
     static embtest::RegToken s_registrationToken;                    \
 };                                                                   \
@@ -377,8 +414,12 @@ void TEST_CLASS_NAME(fixture,testname)::TestBody()
     if (!embtest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 #define ASSERT_FALSE(expr) \
     if (!embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
+#define EXPECT_TRUE(expr) \
+    (void)embtest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)
+#define EXPECT_FALSE(expr) \
+    (void)embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)
 
-#define ASSERT_FPEQ(left,right,eps)                                        \
+#define ASSERT_FPEQ(left,right,eps) \
     if (!embtest::assert_fpeq(true, #left, #right, left, right, eps, __LINE__, __FILE__, s_registrationToken)) return
 
 /**
@@ -386,8 +427,9 @@ void TEST_CLASS_NAME(fixture,testname)::TestBody()
  * detected by an ASSERT* or EXPECT* macro, provide the
  * FAIL() mechanism to report a failure after detection.
  *
- * Note: FAIL() returns a `std::ostream`-compatible reference
- * so a message can be reported as test output. E.g.:
+ * Note: FAIL() returns a reference to a
+ * `std::ostream`-compatible type so a message can be
+ * reported as test output. E.g.:
  *
  *     FAIL() << "World Domination Failed" << std::endl;
  *

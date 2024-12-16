@@ -22,5 +22,6 @@ int main(int argc, char **argv)
         << "A successful run will have 4 failing tests and 1 disabled test"
         << std::endl;
     
+    std::cout << "EMBTEST version: " << embtest::versionString << std::endl;
     return result;
 }
