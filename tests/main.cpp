@@ -1,5 +1,9 @@
 /*
  * Example unit test for the embtest library.
+ *
+ * Copyright (c) 2018,2024 Brent Burton
+ *
+ * SDPX-License-Identifier: ISC
  */
 #include <iostream>
 #include "embtest.hpp"
@@ -19,9 +23,9 @@ int main(int argc, char **argv)
 
     std::cout
         << std::endl
-        << "A successful run will have 4 failing tests and 1 disabled test"
+        << "A successful run will have failing tests and 1 disabled test." << std::endl
+        << "It is expected all FAILED tests will have _ShouldFail in the name." << std::endl
         << std::endl;
     
-    std::cout << "EMBTEST version: " << embtest::versionString << std::endl;
     return result;
 }

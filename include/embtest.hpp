@@ -11,7 +11,7 @@
 #include <cstdint>
 
 #define EMBTEST_VERSION_MAJOR 1
-#define EMBTEST_VERSION_MINOR 1
+#define EMBTEST_VERSION_MINOR 2
 #define EMBTEST_VERSION_PATCH 0
 
 /*
@@ -152,6 +152,24 @@ void recordTestFailure(RegToken token);
 std::ostream& getOutstream();
 
 /**
+ * Templatized function to provide consistent error formatting
+ * for assertion failures.
+ */
+template <typename LType, typename RType>
+void logConditionFailure(bool asserted,
+                        char const* lstr, char const* rstr,
+                        LType const& lval, RType const& rval,
+                        int line, char const* file, char const* oper)
+{
+    getOutstream()
+        << "Failure: (line " << line << ") " << file << std::endl
+        << "       : It is " << (asserted ? "asserted":"expected")
+        << " that left " << oper << " right:" << std::endl
+        << "   left: " << lstr << " = " << lval << std::endl
+        << "  right: " << rstr << " = " << rval << std::endl;
+}
+
+/**
  * Templatized function assert_eq() provides a safe workspace
  * to evaluate equality of two operands (left and right).
  *
@@ -173,35 +191,10 @@ bool assert_eq(bool asserted,
                LType lval, RType rval,
                int line, char const* file, RegToken token)
 {
-    bool failed = (lval != rval);
+    bool failed = !(lval == rval);
     if (failed)
     {
-        getOutstream()
-            << "Failure: (line " << line << ") " << file << std::endl
-            << "       : It is " << (asserted ? "asserted":"expected")
-            << " that these are equal:" << std::endl
-            << "   left: " << lstr << " = " << lval << std::endl
-            << "  right: " << rstr << " = " << rval << std::endl;
-        recordTestFailure(token);
-    }
-    return !failed;
-}
-
-template <typename LType, typename RType>
-bool assert_fpeq(bool asserted,
-                 char const* lstr, char const* rstr,
-                 LType lval, RType rval, float eps,
-                 int line, char const* file, RegToken token)
-{
-    bool failed = !(std::abs(lval - rval) < eps);
-    if (failed)
-    {
-        getOutstream()
-            << "Failure: (line " << line << ") " << file << std::endl
-            << "       : It is " << (asserted ? "asserted":"expected")
-            << " that these are equal:" << std::endl
-            << "   left: " << lstr << " = " << lval << std::endl
-            << "  right: " << rstr << " = " << rval << std::endl;
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, "==");
         recordTestFailure(token);
     }
     return !failed;
@@ -220,20 +213,90 @@ bool assert_ne(bool asserted,
                LType lval, RType rval,
                int line, char const* file, RegToken token)
 {
-    bool failed = (lval == rval);
+    bool failed = !(lval != rval);
     if (failed)
     {
-        getOutstream()
-            << "Failure: (line " << line << ") " << file << std::endl
-            << "       : It is " << (asserted ? "asserted":"expected")
-            << " that these are not equal:" << std::endl
-            << "   left: " << lstr << " = " << lval << std::endl
-            << "  right: " << rstr << " = " << rval << std::endl;
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, "!=");
         recordTestFailure(token);
     }
     return !failed;
 }
 
+template <typename LType, typename RType>
+bool assert_lt(bool asserted,
+               char const* lstr, char const* rstr,
+               LType lval, RType rval,
+               int line, char const* file, RegToken token)
+{
+    bool failed = !(lval < rval);
+    if (failed)
+    {
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, "<");
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
+template <typename LType, typename RType>
+bool assert_le(bool asserted,
+               char const* lstr, char const* rstr,
+               LType lval, RType rval,
+               int line, char const* file, RegToken token)
+{
+    bool failed = !(lval <= rval);
+    if (failed)
+    {
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, "<=");
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
+template <typename LType, typename RType>
+bool assert_gt(bool asserted,
+               char const* lstr, char const* rstr,
+               LType lval, RType rval,
+               int line, char const* file, RegToken token)
+{
+    bool failed = !(lval > rval);
+    if (failed)
+    {
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, ">");
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
+template <typename LType, typename RType>
+bool assert_ge(bool asserted,
+               char const* lstr, char const* rstr,
+               LType lval, RType rval,
+               int line, char const* file, RegToken token)
+{
+    bool failed = !(lval >= rval);
+    if (failed)
+    {
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, ">=");
+        recordTestFailure(token);
+    }
+    return !failed;
+}
+
+
+template <typename LType, typename RType>
+bool assert_fpeq(bool asserted,
+                 char const* lstr, char const* rstr,
+                 LType lval, RType rval, float eps,
+                 int line, char const* file, RegToken token)
+{
+    bool failed = !(std::abs(lval - rval) < eps);
+    if (failed)
+    {
+        logConditionFailure(asserted, lstr, rstr, lval, rval, line, file, "==");
+        recordTestFailure(token);
+    }
+    return !failed;
+}
 /**
  * Assert that some expression is true
  *
@@ -404,18 +467,41 @@ void TEST_CLASS_NAME(fixture,testname)::TestBody()
  */
 #define ASSERT_EQ(left,right) \
     if (!embtest::assert_eq(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
-#define ASSERT_NE(left,right) \
-    if (!embtest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_EQ(left,right) \
     (void)embtest::assert_eq(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_NE(left,right) \
+    if (!embtest::assert_ne(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_NE(left,right) \
     (void)embtest::assert_ne(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_LT(left,right) \
+    if (!embtest::assert_lt(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+#define EXPECT_LT(left,right) \
+    (void)embtest::assert_lt(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_LE(left,right) \
+    if (!embtest::assert_le(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+#define EXPECT_LE(left,right) \
+    (void)embtest::assert_le(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_GT(left,right) \
+    if (!embtest::assert_gt(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+#define EXPECT_GT(left,right) \
+    (void)embtest::assert_gt(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_GE(left,right) \
+    if (!embtest::assert_ge(true, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)) return
+#define EXPECT_GE(left,right) \
+    (void)embtest::assert_ge(false, #left, #right, left, right, __LINE__, __FILE__, s_registrationToken)
+
 #define ASSERT_TRUE(expr) \
     if (!embtest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
-#define ASSERT_FALSE(expr) \
-    if (!embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_TRUE(expr) \
     (void)embtest::assert_true(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)
+
+#define ASSERT_FALSE(expr) \
+    if (!embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)) return
 #define EXPECT_FALSE(expr) \
     (void)embtest::assert_false(true, #expr, expr, __LINE__, __FILE__, s_registrationToken)
 

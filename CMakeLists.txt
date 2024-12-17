@@ -14,10 +14,10 @@ add_library(embtest STATIC
 
 # Add one test executable as a demo
 
+file(GLOB EMBTEST_TEST_SOURCES tests/*.cpp)
+
 add_executable(embtest_unittests
-    tests/main.cpp
-    tests/sample_1.cpp
-    tests/sample_2.cpp
+    ${EMBTEST_TEST_SOURCES}
 )
 
 target_link_libraries(embtest_unittests embtest)

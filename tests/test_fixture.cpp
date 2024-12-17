@@ -1,5 +1,9 @@
 /*
  * Example unit test for the embtest library.
+ *
+ * Copyright (c) 2018,2024 Brent Burton
+ *
+ * SDPX-License-Identifier: ISC
  */
 #include "embtest.hpp"
 

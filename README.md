@@ -36,7 +36,8 @@ Global environment        | no      | yes
 Run order randomization   | no      | yes
 Death tests               | no      | yes
 Value-parameterized tests | no      | yes
-XML or JSON format output | no      | yes
+XML or JSON format output | no      | yes?
+Predicate support         | no      | yes
 
 Of these missing features, I'd probably focus on the
 following additions next.
@@ -129,7 +130,7 @@ $ cd path/to/embtest
 $ mkdir build && cd build
 $ cmake ..
 $ make -j
-$ ./test_unittests
+$ ./embtest_unittests
 ```
 
 ---
